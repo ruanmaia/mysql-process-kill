@@ -27,7 +27,7 @@ def run(username, password, database, host, pattern, state, dry_run):
             (database,)
         )
         
-        for _id, state, info in cursor:
+        for _id, row_state, info in cursor:
             if pattern and info is not None:
                 if info.lower().startswith(pattern.lower()):
                     print(_id, state, info)
@@ -39,7 +39,7 @@ def run(username, password, database, host, pattern, state, dry_run):
                         except:
                             pass
             if state:
-                if state.lower() == state.lower():
+                if row_state.lower() == state.lower():
                     print(_id, state, info)
                     if not dry_run:
                         try:
