@@ -12,8 +12,9 @@ from loguru import logger
 @click.password_option('-p', '--password', confirmation_prompt=False)
 @click.option('-S', '--state', is_flag=True)
 @click.option('-P', '--pattern', is_flag=True)
+@click.option('-C', '--command', is_flag=True)
 @click.argument('statement', nargs=-1)
-def run(username, password, database, host, pattern, state, statement, dry_run):
+def run(username, password, database, host, pattern, state, command, statement, dry_run):
     
     cnx = mysql.connector.connect(
         user=username, 
@@ -24,14 +25,14 @@ def run(username, password, database, host, pattern, state, statement, dry_run):
         cursor = cnx.cursor(buffered=True)
 
         cursor.execute(
-            "SELECT ID, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST WHERE DB=%s;",
+            "SELECT ID, STATE, INFO, COMMAND FROM INFORMATION_SCHEMA.PROCESSLIST WHERE DB=%s;",
             (database,)
         )
 
-        for _id, row_state, info in cursor:
+        for _id, row_state, command, info in cursor:
             if pattern and info is not None:
                 if info.lower().startswith(statement.lower()):
-                    print(_id, row_state, info)
+                    print(_id, command, row_state, info)
                     if not dry_run:
                         try:
                             kill_cs = cnx.cursor()
@@ -39,17 +40,26 @@ def run(username, password, database, host, pattern, state, statement, dry_run):
                             kill_cs.close()
                         except:
                             pass
-            else:
-                if state and row_state is not None:
-                    if row_state.lower().strip() == statement.lower().strip():
-                        print(_id, row_state, info)
-                        if not dry_run:
-                            try:
-                                kill_cs = cnx.cursor()
-                                kill_cs.execute("KILL {};".format(_id))
-                                kill_cs.close()
-                            except:
-                                pass
+            elif state and row_state is not None:
+                if row_state.lower().strip() == statement.lower().strip():
+                    print(_id, command, row_state, info)
+                    if not dry_run:
+                        try:
+                            kill_cs = cnx.cursor()
+                            kill_cs.execute("KILL {};".format(_id))
+                            kill_cs.close()
+                        except:
+                            pass
+            elif command and command is not None:
+                if command.lower().strip() == statement.lower().strip():
+                    print(_id, command, row_state, info)
+                    if not dry_run:
+                        try:
+                            kill_cs = cnx.cursor()
+                            kill_cs.execute("KILL {};".format(_id))
+                            kill_cs.close()
+                        except:
+                            pass
                 
         cursor.close()
     except:
