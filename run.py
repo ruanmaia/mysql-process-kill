@@ -23,10 +23,10 @@ def run(username, password, database, host, pattern, state, command, statement, 
     )
     try:
         cursor = cnx.cursor(buffered=True)
-        statement = statement.lower().strip()
+        statement = ' '.join(statement)
 
         cursor.execute(
-            "SELECT ID, STATE, INFO, COMMAND FROM INFORMATION_SCHEMA.PROCESSLIST WHERE DB=%s;",
+            "SELECT ID, STATE, COMMAND, INFO FROM INFORMATION_SCHEMA.PROCESSLIST WHERE DB=%s;",
             (database,)
         )
 
