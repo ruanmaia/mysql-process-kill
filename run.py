@@ -10,9 +10,10 @@ from loguru import logger
 @click.option('-h', '--host', required=True)
 @click.option('--dry-run', is_flag=True)
 @click.password_option('-p', '--password', confirmation_prompt=False)
-@click.option('-S', '--state', default=None)
-@click.option('-P', '--pattern', default=None)
-def run(username, password, database, host, pattern, state, dry_run):
+@click.option('-S', '--state', is_flag=True)
+@click.option('-P', '--pattern', is_flag=True)
+@click.argument('statement', nargs=-1)
+def run(username, password, database, host, pattern, state, statement, dry_run):
     
     cnx = mysql.connector.connect(
         user=username, 
@@ -26,13 +27,10 @@ def run(username, password, database, host, pattern, state, dry_run):
             "SELECT ID, STATE, INFO FROM INFORMATION_SCHEMA.PROCESSLIST WHERE DB=%s;",
             (database,)
         )
-        
-        print(pattern)
-        print(state)
 
         for _id, row_state, info in cursor:
             if pattern and info is not None:
-                if info.lower().startswith(pattern.lower()):
+                if info.lower().startswith(statement.lower()):
                     print(_id, row_state, info)
                     if not dry_run:
                         try:
@@ -43,7 +41,7 @@ def run(username, password, database, host, pattern, state, dry_run):
                             pass
             else:
                 if state and row_state is not None:
-                    if row_state.lower().strip() == state.lower().strip():
+                    if row_state.lower().strip() == statement.lower().strip():
                         print(_id, row_state, info)
                         if not dry_run:
                             try:
