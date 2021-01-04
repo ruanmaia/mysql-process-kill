@@ -39,7 +39,7 @@ def run(username, password, database, host, pattern, state, dry_run):
                         except:
                             pass
             if state:
-                if row_state.lower() == state.lower():
+                if row_state.lower().strip() == state.lower().strip():
                     print(_id, state, info)
                     if not dry_run:
                         try:
